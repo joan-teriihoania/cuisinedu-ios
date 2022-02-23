@@ -1,0 +1,58 @@
+[
+   {
+      "trackName" : "That's Life",
+      "releaseDate" : "1969-05-01T12:00:00Z",
+      "collectionName" : "Gettin' Down to It",
+      "collectionId" : 1443921474,
+      "artistName" : "James Brown"
+   },
+   {
+      "trackName" : "Shoot the Moon",
+      "releaseDate" : "2002-02-26T08:00:00Z",
+      "collectionName" : "Come Away With Me (Deluxe Edition)",
+      "trackId" : 728317195,
+      "artistName" : "Norah Jones"
+   },
+   {
+      "trackName" : "Kozmic Blues",
+      "releaseDate" : "1969-09-11T07:00:00Z",
+      "collectionName" : "I Got Dem Ol' Kozmic Blues Again Mama!",
+      "trackId" : 1073650453,
+      "artistName" : "Janis Joplin"
+   },
+   {
+      "trackName" : "You Found Another Lover (I Lost Another Friend)",
+      "releaseDate" : "2013-01-29T12:00:00Z",
+      "collectionName" : "Get Up! (Deluxe Version)",
+      "trackId" : 1445844382,
+      "artistName" : "Ben Harper & Charlie Musselwhite"
+   },
+   {
+      "trackName" : "Mean Mistreater",
+      "releaseDate" : "2014-02-21T12:00:00Z",
+      "collectionName" : "True to the Blues: The Johnny Winter Story",
+      "trackId" : 775177929,
+      "artistName" : "Johnny Winter"
+   },
+   {
+      "trackName" : "Blue Valentines",
+      "releaseDate" : "1978-10-01T12:00:00Z",
+      "collectionName" : "Used Songs (1973 - 1980)",
+      "trackId" : 1485075829,
+      "artistName" : "Tom Waits"
+   },
+   {
+      "trackName" : "Little Wing",
+      "releaseDate" : "1991-11-05T08:00:00Z",
+      "collectionName" : "The Essential Stevie Ray Vaughan and Double Trouble",
+      "trackId" : 193064508,
+      "artistName" : "Stevie Ray Vaughan & Double Trouble"
+   },
+   {
+      "trackName" : "The Thrill Is Gone (feat. Tracy Chapman)",
+      "releaseDate" : "1997-11-03T12:00:00Z",
+      "collectionName" : "Deuces Wild",
+      "trackId" : 1423331216,
+      "artistName" : "B.B. King"
+   }
+]
