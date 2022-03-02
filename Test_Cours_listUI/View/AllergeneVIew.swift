@@ -2,17 +2,18 @@
 //  trackView.swift
 //  Test_Cours_listUI
 //
-//  Created by Vincent Baret on 08/02/2022.
+//  Created by m1 on 08/02/2022.
 //
 
 import AlertToast
 import SwiftUI
 
-struct UnitView: View {
+struct AllergeneView: View {
     @Environment(\.presentationMode) var mode: Binding<PresentationMode>
-    var intent: UnitIntent
-    @ObservedObject var viewModel: UnitViewModel
-    @ObservedObject var viewModelOrigin: UnitViewModel
+    var intent: AllergeneIntent
+    var intentOrigin: AllergeneIntent
+    @ObservedObject var viewModel: AllergeneViewModel
+    @ObservedObject var viewModelOrigin: AllergeneViewModel
     @State var message: String = ""
     @State var showMessage: Bool = false
     @State var showLoadingEdit: Bool = false
@@ -22,16 +23,21 @@ struct UnitView: View {
     @State var showToast: Bool = false
     @State var toast: AlertToast = AlertToast(displayMode: .hud, type: .regular, title: "")
     
-    init(vm: UnitViewModel){
-        self.intent = UnitIntent()
+    init(vm: AllergeneViewModel){
+        self.intent = AllergeneIntent()
+        self.intentOrigin = AllergeneIntent()
+        
         self.viewModelOrigin = vm
-        self.viewModel = UnitViewModel(unit: vm.unit.clone())
+        self.viewModel = AllergeneViewModel(allergene: vm.allergene.clone())
+        
         self.intent.addObserver(vm: self.viewModel)
+        self.intentOrigin.addObserver(vm: self.viewModelOrigin)
+        self.intentOrigin.addObserver(vm: self.viewModel)
     }
 
     var body: some View {
         Form {
-            TextField("", text: $viewModel.name, prompt: Text("Nom de l'unité"))
+            TextField("", text: $viewModel.name, prompt: Text("Nom de l'allergène"))
                 .onSubmit {
                     intent.intentToChange(name: viewModel.name)
                 }
@@ -50,14 +56,14 @@ struct UnitView: View {
                     .foregroundColor(Color.blue)
                     .onTapGesture {
                         showLoadingEdit = true
-                        UnitDAO.put(unit: viewModel.unit, callback: {result in
+                        AllergeneDAO.put(allergene: viewModel.allergene, callback: {result in
                             showLoadingEdit = false
                             DispatchQueue.main.async {
                                 switch result {
                                     case .success(_):
                                         self.toast = AlertToast(displayMode: .hud, type: .complete(.green), title: "Modifications enregistrées")
                                         self.showToast.toggle()
-                                        self.viewModelOrigin.unit.set(unit: self.viewModel.unit)
+                                        self.viewModelOrigin.allergene.set(allergene: self.viewModel.allergene)
                                         break
                                     case .failure(let error):
                                         self.message = error.description
@@ -81,15 +87,15 @@ struct UnitView: View {
                     .foregroundColor(Color.red)
                     .onTapGesture {
                         showLoadingDelete = true
-                        intent.intentToDelete()
+                        intentOrigin.intentToDelete()
                     }
                 }
             }
         }
-        .navigationTitle("Unité")
+        .navigationTitle("Allergène")
         .navigationBarBackButtonHidden(true)
         .navigationBarItems(leading: Button(action : {
-            if(!viewModelOrigin.unit.equal(unit: viewModel.unit)){
+            if(!viewModelOrigin.allergene.equal(allergene: viewModel.allergene)){
                 self.showUnsavedChangesWarning = true
             } else {
                 self.mode.wrappedValue.dismiss()

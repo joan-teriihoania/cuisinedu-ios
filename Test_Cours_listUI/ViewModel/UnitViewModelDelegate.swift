@@ -9,5 +9,5 @@ import Foundation
 
 protocol UnitViewModelDelegate {
     func unitViewModelChanged()
-    func unitDeleted()
+    func unitDeleted(unit: Unit)
 }

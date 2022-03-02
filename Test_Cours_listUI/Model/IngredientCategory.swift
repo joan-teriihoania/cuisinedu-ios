@@ -15,7 +15,7 @@ enum IngredientCategoryPropertyChange {
     case NAME(String)
 }
 
-class IngredientCategory: Decodable {
+class IngredientCategory {
     var id: Int
     var name: String {
         didSet {
@@ -24,21 +24,11 @@ class IngredientCategory: Decodable {
     }
     var observers: [IngredientCategoryObserver] = []
     
-    private enum CodingKeys: String, CodingKey {
-        case id = "ingredient_category_id"
-        case name = "name"
-    }
-    
     init(id: Int, name: String){
         self.id = id
         self.name = name
     }
-    
-    required init(from decoder: Decoder) throws {
-        let values = try decoder.container(keyedBy: CodingKeys.self)
-        id = try values.decode(Int.self, forKey: .id)
-        name = try values.decode(String.self, forKey: .name)
-    }
+
     
     func addObserver(obs: IngredientCategoryObserver){
         observers.append(obs)
@@ -51,5 +41,18 @@ class IngredientCategory: Decodable {
                     observer.ingredientCategoryChanged(name: name)
             }
         }
+    }
+    
+    func clone() -> IngredientCategory{
+        return IngredientCategory(id: self.id, name: self.name)
+    }
+    
+    func equal(ic: IngredientCategory) -> Bool{
+        return ic.id == self.id && ic.name == self.name
+    }
+    
+    func set(ic: IngredientCategory){
+        self.id = ic.id
+        self.name = ic.name
     }
 }

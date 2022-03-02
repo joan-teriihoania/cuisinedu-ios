@@ -13,6 +13,7 @@ class IngredientDTO: Decodable {
     var category: IngredientCategoryDTO
     var price: Double
     var name: String
+    var allergenes: [AllergeneDTO]
     static var cache: [Int: Ingredient] = [:]
     
     private enum CodingKeys: String, CodingKey {
@@ -21,6 +22,7 @@ class IngredientDTO: Decodable {
         case category = "category"
         case price = "price"
         case name = "name"
+        case allergenes = "allergenes"
     }
     
     required init(from decoder: Decoder) throws {
@@ -30,10 +32,17 @@ class IngredientDTO: Decodable {
         category = try values.decode(IngredientCategoryDTO.self, forKey: .category)
         price = try values.decode(Double.self, forKey: .price)
         name = try values.decode(String.self, forKey: .name)
+        allergenes = try values.decode([AllergeneDTO].self, forKey: .allergenes)
     }
     
     func toIngredient() -> Ingredient {
-        if IngredientDTO.cache[id] == nil { IngredientDTO.cache[id] = Ingredient(id: id, unit: unit.toUnit(), category: category.toIngredientCategory(), price: price, name: name) }
+        let ingredient = Ingredient(id: id, unit: unit.toUnit(), category: category.toIngredientCategory(), price: price, name: name, allergenes: AllergeneDTO.toAllergene(dtos: allergenes))
+
+        if IngredientDTO.cache[id] == nil {
+            IngredientDTO.cache[id] = ingredient
+        } else {
+            IngredientDTO.cache[self.id]?.set(ingredient: ingredient)
+        }
         
         return IngredientDTO.cache[id]!
     }

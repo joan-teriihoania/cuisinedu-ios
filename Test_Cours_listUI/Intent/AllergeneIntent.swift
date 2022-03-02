@@ -8,7 +8,7 @@
 import Foundation
 import Combine
 
-enum IngredientCategoryIntentState: Equatable, CustomStringConvertible {
+enum AllergeneIntentState: Equatable, CustomStringConvertible {
     case READY
     case CHANGING_NAME(String)
     case DELETING
@@ -28,8 +28,8 @@ enum IngredientCategoryIntentState: Equatable, CustomStringConvertible {
     }
 }
 
-class IngredientCategoryIntent: ObservableObject {
-    private var state = PassthroughSubject<IngredientCategoryIntentState, Never>()
+class AllergeneIntent: ObservableObject {
+    private var state = PassthroughSubject<AllergeneIntentState, Never>()
     
     func intentToChange(name: String){
         self.state.send(.CHANGING_NAME(name))
@@ -41,7 +41,7 @@ class IngredientCategoryIntent: ObservableObject {
         self.state.send(.LIST_UPDATED)
     }
     
-    func addObserver(vm: IngredientCategoryViewModel){
+    func addObserver(vm: AllergeneViewModel){
         self.state.subscribe(vm)
     }
 }

@@ -9,4 +9,5 @@ import Foundation
 
 protocol IngredientCategoryViewModelDelegate {
     func ingredientCategoryViewModelChanged()
+    func ingredientCategoryDeleted(ic: IngredientCategory)
 }

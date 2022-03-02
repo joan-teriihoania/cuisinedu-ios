@@ -15,7 +15,7 @@ protocol UnitObserver {
     func unitChanged(name: String)
 }
 
-class Unit: Decodable {
+class Unit {
     var id: Int
     var name: String {
         didSet {
@@ -29,17 +29,6 @@ class Unit: Decodable {
         self.name = name
     }
     
-    private enum CodingKeys: String, CodingKey {
-        case id = "unit_id"
-        case name = "name"
-    }
-    
-    required init(from decoder: Decoder) throws {
-        let values = try decoder.container(keyedBy: CodingKeys.self)
-        id = try values.decode(Int.self, forKey: .id)
-        name = try values.decode(String.self, forKey: .name)
-    }
-    
     func addObserver(obs: UnitObserver){
         observers.append(obs)
     }
@@ -51,6 +40,19 @@ class Unit: Decodable {
                     observer.unitChanged(name: name)
             }
         }
+    }
+    
+    func clone() -> Unit{
+        return Unit(id: self.id, name: self.name)
+    }
+    
+    func equal(unit: Unit) -> Bool{
+        return unit.id == self.id && unit.name == self.name
+    }
+    
+    func set(unit: Unit){
+        self.id = unit.id
+        self.name = unit.name
     }
     
 }

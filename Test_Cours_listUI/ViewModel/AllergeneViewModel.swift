@@ -9,7 +9,7 @@ import Foundation
 import Combine
 import CoreText
 
-enum UnitError: Error, Equatable, CustomStringConvertible {
+enum AllergeneError: Error, Equatable, CustomStringConvertible {
     case NONE
     case NAME(String)
     case DELETE(String)
@@ -19,18 +19,18 @@ enum UnitError: Error, Equatable, CustomStringConvertible {
             case .NONE:
                     return "No error"
             case .NAME:
-                    return "Unit name isn't  valid"
+                    return "Allergene name isn't  valid"
             case .DELETE:
-                return "Unable to delete unit"
+                return "Unable to delete allergene"
         }
     }
 }
 
-class UnitViewModel: ObservableObject, UnitObserver, Subscriber {
-    typealias Input = UnitIntentState
+class AllergeneViewModel: ObservableObject, AllergeneObserver, Subscriber {
+    typealias Input = AllergeneIntentState
     typealias Failure = Never
     
-    private(set) var unit: Unit
+    private(set) var allergene: Allergene
     @Published var name: String {
         didSet {
             if(name.count == 0){
@@ -39,16 +39,20 @@ class UnitViewModel: ObservableObject, UnitObserver, Subscriber {
         }
     }
     
-    @Published var error: UnitError = .NONE
+    @Published var error: AllergeneError = .NONE {
+        didSet {
+            self.delegate?.allergeneViewModelChanged()
+        }
+    }
     @Published var deleted: Bool = false
-    var delegate: UnitViewModelDelegate?
+    var delegate: AllergeneViewModelDelegate?
     
-    init(unit: Unit){
-        self.unit = unit
-        self.name = unit.name
+    init(allergene: Allergene){
+        self.allergene = allergene
+        self.name = allergene.name
     }
     
-    func unitChanged(name: String) {
+    func allergeneChanged(name: String) {
         self.name = name
     }
     
@@ -60,22 +64,22 @@ class UnitViewModel: ObservableObject, UnitObserver, Subscriber {
         return
     }
     
-    func receive(_ input: UnitIntentState) -> Subscribers.Demand {
+    func receive(_ input: AllergeneIntentState) -> Subscribers.Demand {
         self.error = .NONE
         switch input {
             case .READY:
                 break
             case .CHANGING_NAME(let name):
-                self.unit.name = name
-                if(self.unit.name != name){
+                self.allergene.name = name
+                if(self.allergene.name != name){
                     self.error = .NAME("Invalid input")
                 }
             case .DELETING:
-                UnitDAO.delete(id: self.unit.id, callback: {result in
+                AllergeneDAO.delete(id: self.allergene.id, callback: {result in
                     DispatchQueue.main.async {
                         switch result {
                             case .success(_):
-                                self.delegate?.unitDeleted(unit: self.unit)
+                                self.delegate?.allergeneDeleted(allergene: self.allergene)
                                 self.deleted = true
                                 break
                             case .failure(let error):
@@ -85,7 +89,7 @@ class UnitViewModel: ObservableObject, UnitObserver, Subscriber {
                 })
                 break
             case .LIST_UPDATED:
-                self.delegate?.unitViewModelChanged()
+                self.delegate?.allergeneViewModelChanged()
                 break
         }
         

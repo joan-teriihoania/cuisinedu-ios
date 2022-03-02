@@ -24,7 +24,12 @@ class IngredientCategoryDTO: Decodable {
     }
     
     func toIngredientCategory() -> IngredientCategory {
-        if IngredientCategoryDTO.cache[id] == nil { IngredientCategoryDTO.cache[id] = IngredientCategory(id: id, name: name) }
+        let ic = IngredientCategory(id: id, name: name)
+        if IngredientCategoryDTO.cache[id] == nil {
+            IngredientCategoryDTO.cache[id] = ic
+        } else {
+            IngredientCategoryDTO.cache[self.id]?.set(ic: ic)
+        }
         return IngredientCategoryDTO.cache[id]!
     }
     

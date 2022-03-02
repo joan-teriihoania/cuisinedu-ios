@@ -5,19 +5,34 @@
 //  Created by Vincent Baret on 08/02/2022.
 //
 
+import AlertToast
 import SwiftUI
 
 struct IngredientView: View {
     @Environment(\.presentationMode) var mode: Binding<PresentationMode>
     var intent: IngredientIntent
+    var intentOrigin: IngredientIntent
     @ObservedObject var viewModel: IngredientViewModel
+    @ObservedObject var viewModelOrigin: IngredientViewModel
     @State var message: String = ""
     @State var showMessage: Bool = false
+    @State var showLoadingEdit: Bool = false
+    @State var showLoadingDelete: Bool = false
+    @State var showUnsavedChangesWarning: Bool = false
+    
+    @State var showToast: Bool = false
+    @State var toast: AlertToast = AlertToast(displayMode: .hud, type: .regular, title: "")
     
     init(vm: IngredientViewModel){
         self.intent = IngredientIntent()
-        self.viewModel = vm
+        self.intentOrigin = IngredientIntent(
+        )
+        self.viewModelOrigin = vm
+        self.viewModel = IngredientViewModel(ingredient: vm.ingredient.clone())
+        
         self.intent.addObserver(vm: self.viewModel)
+        self.intentOrigin.addObserver(vm: self.viewModelOrigin)
+        self.intentOrigin.addObserver(vm: self.viewModel)
     }
 
     var body: some View {
@@ -47,20 +62,30 @@ struct IngredientView: View {
                 Section{
                     HStack{
                         Button(action: {}){
-                            Image(systemName: "paperplane")
+                            if(self.showLoadingEdit){
+                                ProgressView()
+                                    .progressViewStyle(CircularProgressViewStyle())
+                            } else {
+                                Image(systemName: "paperplane")
+                            }
                             Text("Enregistrer")
                         }
                         .foregroundColor(Color.blue)
                         .onTapGesture {
+                            showLoadingEdit = true
                             IngredientDAO.put(ingredient: viewModel.ingredient, callback: {result in
-                                switch result {
-                                    case .success(_):
-                                        self.message = "Modifications enregistrées"
-                                        self.showMessage = true
-                                        break
-                                    case .failure(let error):
-                                        self.message = error.description
-                                        self.showMessage = true
+                                showLoadingEdit = false
+                                DispatchQueue.main.async {
+                                    switch result {
+                                        case .success(_):
+                                            self.toast = AlertToast(displayMode: .hud, type: .complete(.green), title: "Modifications enregistrées")
+                                            self.showToast.toggle()
+                                            self.viewModelOrigin.ingredient.set(ingredient: self.viewModel.ingredient)
+                                            break
+                                        case .failure(let error):
+                                            self.message = error.description
+                                            self.showMessage = true
+                                    }
                                 }
                             })
                         }
@@ -68,46 +93,113 @@ struct IngredientView: View {
                         Spacer()
                         
                         Button(action: {}){
-                            Image(systemName: "trash")
+                            if(self.showLoadingDelete){
+                                ProgressView()
+                                    .progressViewStyle(CircularProgressViewStyle())
+                            } else {
+                                Image(systemName: "trash")
+                            }
                             Text("Supprimer")
                         }
                         .foregroundColor(Color.red)
                         .onTapGesture {
-                            intent.intentToDelete()
+                            showLoadingDelete = true
+                            intentOrigin.intentToDelete()
                         }
                     }
                 }
             }
-            .navigationTitle("Ingrédient")
-            .onChange(of: viewModel.error){ error in
-                switch error {
-                    case .NONE:
-                        return
-                    case .NAME(let reason):
-                        self.message = reason
-                        self.showMessage = true
-                    case .CATEGORY(let reason):
-                        self.message = reason
-                        self.showMessage = true
-                    case .PRICE(let reason):
-                        self.message = reason
-                        self.showMessage = true
-                    case .UNIT(let reason):
-                        self.message = reason
-                        self.showMessage = true
-                    case .DELETE(let reason):
-                        self.message = reason
-                        self.showMessage = true
+            
+            Divider()
+            
+            HStack {
+                Text("Allergènes").font(.largeTitle).bold()
+                Spacer()
+                Button(action: {
+                    
+                }, label: {
+                    Image(systemName: "plus")
+                })
+                EditButton()
+            }.padding()
+            VStack {
+                if viewModel.allergenes.data.count == 0 {
+                    Text("Cet ingrédient ne contient pas d'allergène")
                 }
-            }.onChange(of: viewModel.deleted){ deleted in
-                if(deleted){
-                    self.mode.wrappedValue.dismiss()
+                List {
+                    ForEach(viewModel.allergenes.vms, id: \.allergene.id) {
+                        vm in
+                        NavigationLink(destination: AllergeneView(vm: vm)){
+                            VStack(alignment: .leading) {
+                                Text(vm.allergene.name)
+                            }
+                        }.onChange(of: vm.error, perform: { error in
+                            switch error {
+                                case .DELETE(let reason):
+                                    message = reason
+                                    showMessage = true
+                                default:
+                                    break
+                            }
+                        })
+                    }
+                    .onDelete{ indexSet in
+                        viewModel.allergenes.remove(atOffsets: indexSet)
+                    }
                 }
             }
-            .alert("\(message)", isPresented: $showMessage){
-                Button("Fermer", role: .cancel){
-                    showMessage = false
-                }
+        }
+        .navigationTitle("Ingrédient")
+        .navigationBarBackButtonHidden(true)
+        .navigationBarItems(leading: Button(action : {
+            if(!viewModelOrigin.ingredient.equal(ingredient: viewModel.ingredient, ignoreAllergenes: true)){
+                self.showUnsavedChangesWarning = true
+            } else {
+                self.mode.wrappedValue.dismiss()
+            }
+        }){
+            Image(systemName: "arrow.left")
+        })
+        .onChange(of: viewModel.error){ error in
+            switch error {
+                case .NONE:
+                    return
+                case .NAME(let reason):
+                    self.message = reason
+                    self.showMessage = true
+                case .CATEGORY(let reason):
+                    self.message = reason
+                    self.showMessage = true
+                case .PRICE(let reason):
+                    self.message = reason
+                    self.showMessage = true
+                case .UNIT(let reason):
+                    self.message = reason
+                    self.showMessage = true
+                case .DELETE(let reason):
+                    self.message = reason
+                    self.showMessage = true
+                    self.showLoadingDelete = false
+                case .ALLERGENE(let reason):
+                    self.message = reason
+                    self.showMessage = true
+            }
+        }.onChange(of: viewModelOrigin.deleted){ deleted in
+            if(deleted){
+                self.mode.wrappedValue.dismiss()
+            }
+        }.toast(isPresenting: $showToast){
+            toast
+        }.alert("\(message)", isPresented: $showMessage){
+            Button("Ok", role: .cancel){
+                showMessage = false
+            }
+        }.alert("Vous avez des modifications qui ne sont pas enregistrées.", isPresented: $showUnsavedChangesWarning){
+            Button("Quitter sans enregistrer"){
+                self.mode.wrappedValue.dismiss()
+            }
+            Button("Ne pas quitter", role: .cancel){
+                showUnsavedChangesWarning = false
             }
         }
     }

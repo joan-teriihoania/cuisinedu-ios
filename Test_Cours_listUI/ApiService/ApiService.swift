@@ -33,6 +33,21 @@ class ApiConfig: Decodable {
         return URL(string: API_URL + appended)!
     }
     
+    static func getApiConfig() -> ApiConfig? {
+        let api_config_loadFromFile_result = JSONHelper.loadFomFile(name: "api_config", ext: "json")
+        switch api_config_loadFromFile_result {
+            case let .success(data):
+                let api_config_decode_result: Result<ApiConfig, JSONError> = JSONHelper.decode(data: data)
+                switch api_config_decode_result {
+                    case let .success(apiConfig):
+                        return apiConfig
+                    case let .failure(error): print("[APICONFIG] Error: \(error)")
+                }
+            case let .failure(error): print("[APICONFIG] Error: \(error)")
+        }
+        
+        return nil
+    }
 }
 
 enum ApiServiceError: Error {
@@ -44,13 +59,13 @@ enum ApiServiceError: Error {
     var description: String {
         switch self {
             case .ACCESS_DENIED(let r):
-                return "Access denied: \(r)"
+                return "Accès refusé: \(r)"
             case .NOT_FOUND(let r):
-                return "Not found: \(r)"
+                return "Introuvable: \(r)"
             case .INTERNAL_ERROR(let r):
-                return "Internal error: \(r)"
+                return "Erreur interne: \(r)"
             case .UNKNOWN(let r):
-                return "Error: \(r)"
+                return "Erreur: \(r)"
         }
     }
 }
@@ -231,6 +246,7 @@ class ApiService {
                 
                 if let data = data, let o = try? JSONDecoder().decode(T.self, from: data){
                     onsuccess(o)
+                    return
                 }
                 
                 onerror(errorMessage, response as! HTTPURLResponse, nil)

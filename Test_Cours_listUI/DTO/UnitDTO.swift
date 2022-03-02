@@ -24,7 +24,14 @@ class UnitDTO: Decodable {
     }
     
     func toUnit() -> Unit {
-        if UnitDTO.cache[id] == nil { UnitDTO.cache[id] = Unit(id: id, name: name) }
+        let unit = Unit(id: id, name: name)
+        
+        if UnitDTO.cache[id] == nil {
+            UnitDTO.cache[id] = unit
+        } else {
+            UnitDTO.cache[self.id]?.set(unit: unit)
+        }
+        
         return UnitDTO.cache[id]!
     }
     

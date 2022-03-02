@@ -49,6 +49,24 @@ class IngredientDAO {
         })
     }
     
+    static func addAllergene(ingredient_id: Int, allergene_id: Int, callback: @escaping (Result<Ingredient, ApiServiceError>) -> Void){
+        ApiService.post(IngredientDTO.self, route: "/ingredients/\(ingredient_id)/allergenes/\(allergene_id)", parameters: [:], onsuccess: { ingredient in
+            callback(.success(ingredient.toIngredient()))
+        }, onerror: { (reason, response, error) in
+            callback(.failure(error == nil ? ApiServiceError.UNKNOWN(reason) : error as! ApiServiceError))
+        })
+    }
+    
+    static func removeAllergene(ingredient_id: Int, allergene_id: Int, callback: @escaping (Result<Ingredient, ApiServiceError>) -> Void){
+        ApiService.delete(IngredientDTO.self, route: "/ingredients/\(ingredient_id)/allergenes/\(allergene_id)", parameters: [:], onsuccess: { ingredient in
+            callback(.success(ingredient.toIngredient()))
+        }, onsuccessText: { text in
+            callback(.failure(ApiServiceError.UNKNOWN(text)))
+        },onerror: { (reason, response, error) in
+            callback(.failure(error == nil ? ApiServiceError.UNKNOWN(reason) : error as! ApiServiceError))
+        })
+    }
+    
     static func put(ingredient: Ingredient, callback: @escaping (Result<Ingredient, ApiServiceError>) -> Void){
         ApiService.put(IngredientDTO.self, route: "/ingredients/\(ingredient.id)", parameters: [
             "unit_id": ingredient.unit.id,

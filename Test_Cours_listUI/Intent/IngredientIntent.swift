@@ -18,6 +18,8 @@ enum IngredientIntentState: Equatable, CustomStringConvertible {
     case CHANGING_CATEGORY(IngredientCategory)
     case CHANGING_NAME(String)
     case CHANGING_PRICE(Double)
+    case ADDING_ALLERGENE(Allergene)
+    case REMOVING_ALLERGENE(Allergene)
     case DELETING
     case LIST_UPDATED
     
@@ -33,6 +35,10 @@ enum IngredientIntentState: Equatable, CustomStringConvertible {
                 return "Changing category to \(cat.name)"
             case .CHANGING_PRICE(let price):
                 return "Changing price to \(price)"
+            case .ADDING_ALLERGENE:
+                return "Adding allergene"
+            case .REMOVING_ALLERGENE:
+                return "Removing allergene"
             case .DELETING:
                 return "Deleting"
             case .LIST_UPDATED:
@@ -43,6 +49,16 @@ enum IngredientIntentState: Equatable, CustomStringConvertible {
 
 class IngredientIntent: ObservableObject {
     private var state = PassthroughSubject<IngredientIntentState, Never>()
+    
+    func intentToAddAllergene(allergene: Allergene){
+        self.state.send(.ADDING_ALLERGENE(allergene))
+        self.state.send(.LIST_UPDATED)
+    }
+    
+    func intentToRemoveAllergene(allergene: Allergene){
+        self.state.send(.REMOVING_ALLERGENE(allergene))
+        self.state.send(.LIST_UPDATED)
+    }
     
     func intentToChange(name: String){
         self.state.send(.CHANGING_NAME(name))

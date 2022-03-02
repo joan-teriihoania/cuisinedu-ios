@@ -12,33 +12,37 @@ class Ingredients: ObservableObject, IngredientViewModelDelegate {
     @Published var vms: [IngredientViewModel]
     
     func ingredientViewModelChanged() {
-        DispatchQueue.main.async { self.objectWillChange.send() }
+        self.objectWillChange.send()
     }
     
     func ingredientDeleted(ingredient: Ingredient) {
-        DispatchQueue.main.async {
-            if let index = self.data.firstIndex(of: ingredient){
-                self.data.remove(at: index)
-                self.vms.remove(at: index)
-            }
+        if let index = self.data.firstIndex(of: ingredient){
+            self.data.remove(at: index)
+            self.vms.remove(at: index)
         }
     }
     
     func remove(atOffsets: IndexSet){
-        DispatchQueue.main.async {
-            atOffsets.forEach{ (i) in
-                let intent: IngredientIntent = IngredientIntent()
-                intent.addObserver(vm: self.vms[i])
-                intent.intentToDelete()
-            }
+        atOffsets.forEach{ (i) in
+            let intent: IngredientIntent = IngredientIntent()
+            intent.addObserver(vm: self.vms[i])
+            intent.intentToDelete()
         }
     }
     
     func remove(atIndex: Int){
-        DispatchQueue.main.async {
-            self.data.remove(at: atIndex)
-            self.vms.remove(at: atIndex)
+        self.data.remove(at: atIndex)
+        self.vms.remove(at: atIndex)
+    }
+    
+    func reloadVms(){
+        self.vms = []
+        for ingredient in self.data {
+            let vm = IngredientViewModel(ingredient: ingredient)
+            vm.delegate = self
+            self.vms.append(vm)
         }
+        self.ingredientViewModelChanged()
     }
     
     init(retrieveFromApi: Bool){
@@ -51,14 +55,10 @@ class Ingredients: ObservableObject, IngredientViewModelDelegate {
                     case .success(let ingredients):
                         DispatchQueue.main.async {
                             self.data = ingredients.sorted(by: {$0.name.lowercased() < $1.name.lowercased()})
-                            for d in self.data {
-                                let vm = IngredientViewModel(ingredient: d)
-                                vm.delegate = self
-                                self.vms.append(vm)
-                            }
+                            self.reloadVms()
                             self.ingredientViewModelChanged()
                         }
-                    case .failure(let error):
+                    case .failure(_):
                         break
                 }
             })

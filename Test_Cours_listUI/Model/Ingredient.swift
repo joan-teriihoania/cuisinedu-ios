@@ -12,6 +12,7 @@ protocol IngredientObserver {
     func changed(category: IngredientCategory)
     func changed(price: Double)
     func changed(name: String)
+    func changed(allergenes: [Allergene])
 }
 
 enum IngredientPropertyChange {
@@ -19,9 +20,14 @@ enum IngredientPropertyChange {
     case CATEGORY
     case PRICE
     case NAME
+    case ALLERGENES
 }
 
-class Ingredient: ObservableObject, UnitObserver, IngredientCategoryObserver, Equatable {
+class Ingredient: ObservableObject, UnitObserver, IngredientCategoryObserver, Equatable, AllergeneObserver {
+    func allergeneChanged(name: String) {
+        notifyObservers(t: .ALLERGENES)
+    }
+    
     static func == (lhs: Ingredient, rhs: Ingredient) -> Bool {
         return lhs.id == rhs.id
     }
@@ -35,6 +41,11 @@ class Ingredient: ObservableObject, UnitObserver, IngredientCategoryObserver, Eq
     @Published var category: IngredientCategory {
         didSet {
             notifyObservers(t: .CATEGORY)
+        }
+    }
+    @Published var allergenes: [Allergene] {
+        didSet {
+            notifyObservers(t: .ALLERGENES)
         }
     }
     @Published var price: Double {
@@ -57,21 +68,23 @@ class Ingredient: ObservableObject, UnitObserver, IngredientCategoryObserver, Eq
         unit: Unit,
         category: IngredientCategory,
         price: Double,
-        name: String
+        name: String,
+        allergenes: [Allergene]
     ){
         self.id = id
         self.unit = unit
         self.category = category
         self.price = price
         self.name = name
+        self.allergenes = allergenes
         self.observers = []
-        
+
         self.unit.addObserver(obs: self)
         self.category.addObserver(obs: self)
     }
     
     var description: String {
-        return "Ingrédient \(name) au prix de \(price) \(unit.name) dans la catégorie \(category.name) avec les allergènes"
+        return "Ingrédient \(name) au prix de \(price) \(unit.name) dans la catégorie \(category.name)"
     }
     
     func unitChanged(name: String) {
@@ -97,8 +110,62 @@ class Ingredient: ObservableObject, UnitObserver, IngredientCategoryObserver, Eq
                     observer.changed(price: price)
                 case .NAME:
                     observer.changed(name: name)
+                case .ALLERGENES:
+                    observer.changed(allergenes: allergenes)
             }
         }
     }
     
+    func set(ingredient: Ingredient){
+        self.id = ingredient.id
+        self.price = ingredient.price
+        self.name = ingredient.name
+        // self.unit = ingredient.unit
+        // self.category = ingredient.category
+        //self.allergenes = ingredient.allergenes
+        self.unit.set(unit: ingredient.unit)
+        self.category.set(ic: ingredient.category)
+        self.allergenes = ingredient.allergenes
+    }
+    
+    func equal(ingredient: Ingredient, ignoreAllergenes: Bool) -> Bool {
+        var isAllergeneEqual: Bool = true
+        if(!ignoreAllergenes){
+            if(self.allergenes.count == ingredient.allergenes.count){
+                for i in 0..<self.allergenes.count {
+                    if(!self.allergenes[i].equal(allergene: ingredient.allergenes[i])){
+                        isAllergeneEqual = false
+                        break
+                    }
+                }
+            } else {
+                isAllergeneEqual = false
+            }
+        }
+        
+        return
+            self.id == ingredient.id &&
+            self.unit.equal(unit: ingredient.unit) &&
+            self.category.equal(ic: ingredient.category) &&
+            self.price == ingredient.price &&
+            self.name == ingredient.name &&
+            isAllergeneEqual
+    }
+    
+    func equal(ingredient: Ingredient) -> Bool {
+        return equal(ingredient: ingredient, ignoreAllergenes: false)
+    }
+    
+    private func cloneAllergenes(allergenes: [Allergene]) -> [Allergene] {
+        var cloneAllergenes: [Allergene] = []
+        for allergene in allergenes {
+            cloneAllergenes.append(allergene.clone())
+        }
+        
+        return cloneAllergenes
+    }
+    
+    func clone() -> Ingredient {
+        return Ingredient(id: self.id, unit: self.unit.clone(), category: self.category.clone(), price: self.price, name: self.name, allergenes: cloneAllergenes(allergenes: self.allergenes))
+    }
 }

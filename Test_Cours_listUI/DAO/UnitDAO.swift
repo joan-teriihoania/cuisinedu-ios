@@ -7,8 +7,6 @@
 
 import Foundation
 
-// TODO: Ingredients section by categories
-
 class UnitDAO {
     static func get(id: Int, callback: @escaping (Result<Unit, ApiServiceError>) -> Void){
         ApiService.get(UnitDTO.self, route: "/units/\(id)", onsuccess: { unit in

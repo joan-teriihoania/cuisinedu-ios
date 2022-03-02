@@ -8,6 +8,7 @@
 import Foundation
 import Combine
 import CoreText
+import SwiftUI
 
 enum IngredientError: Error, Equatable, CustomStringConvertible {
     case NONE
@@ -16,6 +17,7 @@ enum IngredientError: Error, Equatable, CustomStringConvertible {
     case CATEGORY(String)
     case PRICE(String)
     case DELETE(String)
+    case ALLERGENE(String)
     
     var description: String {
         switch self {
@@ -31,11 +33,13 @@ enum IngredientError: Error, Equatable, CustomStringConvertible {
                     return "Price value isn't valid"
             case .DELETE:
                 return "Delete error"
+            case .ALLERGENE:
+                return "Allergene error"
         }
     }
 }
 
-class IngredientViewModel: ObservableObject, IngredientObserver, Subscriber {
+class IngredientViewModel: ObservableObject, IngredientObserver, Subscriber  {
     typealias Input = IngredientIntentState
     typealias Failure = Never
     
@@ -45,8 +49,13 @@ class IngredientViewModel: ObservableObject, IngredientObserver, Subscriber {
     @Published var price: Double
     @Published var name: String
     @Published var deleted: Bool = false
+    @ObservedObject var allergenes: IngredientAllergenes
     
-    @Published var error: IngredientError = .NONE
+    @Published var error: IngredientError = .NONE {
+        didSet {
+            self.delegate?.ingredientViewModelChanged()
+        }
+    }
     var delegate: IngredientViewModelDelegate?
     
     init(ingredient: Ingredient){
@@ -55,23 +64,38 @@ class IngredientViewModel: ObservableObject, IngredientObserver, Subscriber {
         self.category = ingredient.category
         self.price = ingredient.price
         self.name = ingredient.name
+        self.allergenes = IngredientAllergenes(allergenes: ingredient.allergenes)
+        
+        self.allergenes.vm = self
         self.ingredient.addObserver(obs: self)
     }
     
     func changed(unit: Unit) {
-        self.unit = unit
+        DispatchQueue.main.async {
+            self.unit = unit
+        }
     }
     
     func changed(category: IngredientCategory) {
-        self.category = category
+        DispatchQueue.main.async {
+            self.category = category
+        }
     }
     
     func changed(price: Double) {
-        self.price = price
+        DispatchQueue.main.async {
+            self.price = price
+        }
     }
     
     func changed(name: String) {
-        self.name = name
+        DispatchQueue.main.async {
+            self.name = name
+        }
+    }
+    
+    func changed(allergenes: [Allergene]){
+        self.allergenes.set(allergenes: allergenes)
     }
     
     func receive(subscription: Subscription) {
@@ -83,6 +107,7 @@ class IngredientViewModel: ObservableObject, IngredientObserver, Subscriber {
     }
     
     func receive(_ input: IngredientIntentState) -> Subscribers.Demand {
+        self.error = .NONE
         switch input {
             case .READY:
                 break
@@ -117,6 +142,29 @@ class IngredientViewModel: ObservableObject, IngredientObserver, Subscriber {
             case .LIST_UPDATED:
                 self.delegate?.ingredientViewModelChanged()
                 break
+            case .ADDING_ALLERGENE(let allergene):
+                IngredientDAO.addAllergene(ingredient_id: self.ingredient.id, allergene_id: allergene.id, callback: { result in
+                    DispatchQueue.main.async {
+                        switch result {
+                            case .success(_):
+                                self.delegate?.ingredientViewModelChanged()
+                            case .failure(let error):
+                                self.error = .ALLERGENE(error.description)
+                        }
+                    }
+                })
+            case .REMOVING_ALLERGENE(let allergene):
+                IngredientDAO.removeAllergene(ingredient_id: self.ingredient.id, allergene_id: allergene.id, callback: { result in
+                    DispatchQueue.main.async {
+                        switch result {
+                            case .success(_):
+                                self.allergenes.remove(atIndex: self.allergenes.data.firstIndex(of: allergene)!)
+                                self.delegate?.ingredientViewModelChanged()
+                            case .failure(let error):
+                                self.error = .ALLERGENE(error.description)
+                        }
+                    }
+                })
         }
         
         return .none

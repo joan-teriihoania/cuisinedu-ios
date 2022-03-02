@@ -7,8 +7,8 @@
 
 import SwiftUI
 
-struct IngredientListView: View {
-    @StateObject var data: Ingredients = Ingredients(retrieveFromApi: true)
+struct AllergeneListView: View {
+    @StateObject var data: Allergenes = Allergenes(allergenes: nil)
     @State var searchTerms: String = ""
     @State var showMessage: Bool = false
     @State var message: String = ""
@@ -20,20 +20,15 @@ struct IngredientListView: View {
                 .padding()
             Divider()
             List {
-                ForEach(data.vms, id: \.ingredient.id) {
+                ForEach(data.vms, id: \.allergene.id) {
                     vm in
                     if(
-                        vm.ingredient.name.lowercased().contains(searchTerms.lowercased()) ||
-                        vm.ingredient.unit.name.lowercased().contains(searchTerms.lowercased()) ||
-                        vm.ingredient.category.name.lowercased().contains(searchTerms.lowercased()) ||
-                        vm.ingredient.allergenes.filter({ allergene in
-                            return allergene.name.lowercased().contains(searchTerms.lowercased())
-                        }).count > 0 ||
+                        vm.allergene.name.lowercased().contains(searchTerms.lowercased()) ||
                         searchTerms.count == 0
                     ){
-                        NavigationLink(destination: IngredientView(vm: vm)){
+                        NavigationLink(destination: AllergeneView(vm: vm)){
                             VStack(alignment: .leading) {
-                                Text(vm.ingredient.name)
+                                Text(vm.allergene.name)
                             }
                         }.onChange(of: vm.error, perform: { error in
                             switch error {
@@ -52,7 +47,7 @@ struct IngredientListView: View {
                 }
             }
         }
-        .navigationTitle("Liste d'ingrédients")
+        .navigationTitle("Liste d'allergènes")
         .toolbar(){
             HStack {
                 EditButton()
