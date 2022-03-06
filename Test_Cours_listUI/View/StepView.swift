@@ -8,6 +8,9 @@
 import AlertToast
 import SwiftUI
 
+// TODO: Editing conflict, object step seems to be rolled back whenever it is saved to the API
+// Check for conflicts or casual observers
+
 struct StepView: View {
     @Environment(\.presentationMode) var mode: Binding<PresentationMode>
     var intent: StepIntent
@@ -20,7 +23,11 @@ struct StepView: View {
     @State var showLoadingDelete: Bool = false
     @State var showUnsavedChangesWarning: Bool = false
     
+    @State var showInsertComponentsList: Bool = false
+    @State var componentsList: StepComponents = StepComponents(components: [])
+    
     @State var showToast: Bool = false
+    @State var showToastUndismissable: Bool = false
     @State var toast: AlertToast = AlertToast(displayMode: .hud, type: .regular, title: "")
     
     init(vm: StepViewModel){
@@ -110,6 +117,23 @@ struct StepView: View {
                     .bold()
                     .padding()
                 Spacer()
+                Button(action: {
+                    self.toast = AlertToast(displayMode: .alert, type: .loading, title: "Chargement des composants...", subTitle: "Veuillez patienter quelques instants")
+                    self.showToastUndismissable = true
+                    StepComponentDAO.getAll(callback: { result in
+                        self.showToastUndismissable = false
+                        switch result {
+                            case .success(let components):
+                                self.componentsList.set(components: components)
+                                self.showInsertComponentsList = true
+                            case .failure(let error):
+                                self.toast = AlertToast(displayMode: .alert, type: .error(.red), title: "Erreur : Nous n'avons pas pu charger la liste des composants", subTitle: error.description)
+                                self.showToast = true
+                        }
+                    })
+                }, label: {
+                    Image(systemName: "plus")
+                })
                 EditButton()
             }
             VStack {
@@ -171,7 +195,24 @@ struct StepView: View {
                         viewModel.components.remove(atOffsets: indexSet)
                     }
                 }
-            }
+            }.popup(isPresented: $showInsertComponentsList, type: .default, position: .bottom, closeOnTap: false, view: {
+                VStack {
+                    Text("Sélectionnez un composant à ajouter :")
+                    
+                    List{
+                        ForEach(componentsList.vms, id: \.stepComponent.id){
+                            vm in
+                            Button(vm.stepComponent.component.getName(), action: {
+                                self.intentOrigin.intentToAddComponent(component: vm.stepComponent)
+                                self.showInsertComponentsList = false
+                            })
+                        }
+                    }
+                }
+                .padding()
+                .background(.white)
+                .cornerRadius(30)
+            }).padding()
         }
         .padding()
         .navigationTitle("Etape")
@@ -211,6 +252,8 @@ struct StepView: View {
                 self.mode.wrappedValue.dismiss()
             }
         }.toast(isPresenting: $showToast){
+            toast
+        }.toast(isPresenting: $showToastUndismissable, duration: 0, tapToDismiss: false){
             toast
         }.alert("\(message)", isPresented: $showMessage){
             Button("Ok", role: .cancel){

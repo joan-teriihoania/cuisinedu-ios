@@ -38,7 +38,7 @@ enum StepError: Error, Equatable, CustomStringConvertible {
 
 class StepViewModel: ObservableObject, StepObserver, Subscriber  {
     func stepChanged(name: String) {
-        self.name = name
+       self.name = name
     }
     
     func stepChanged(description: String) {
@@ -94,21 +94,21 @@ class StepViewModel: ObservableObject, StepObserver, Subscriber  {
         switch input {
             case .READY:
                 break
-        case .CHANGING_NAME(let name):
-            self.step.name = name
-            if(self.step.name != name){
-                self.error = .NAME("Invalid input")
-            }
-        case .CHANGING_DESCRIPTION(let desc):
-            self.step.description = desc
-            if(self.step.description != desc){
-                self.error = .DESCRIPTION("Invalid input")
-            }
-        case .CHANGING_DURATION(let duration):
-            self.step.duration = duration
-            if(self.step.duration != duration){
-                self.error = .DURATION("Invalid input")
-            }
+            case .CHANGING_NAME(let name):
+                self.step.name = name
+                if(self.step.name != name){
+                    self.error = .NAME("Invalid input")
+                }
+            case .CHANGING_DESCRIPTION(let desc):
+                self.step.description = desc
+                if(self.step.description != desc){
+                    self.error = .DESCRIPTION("Invalid input")
+                }
+            case .CHANGING_DURATION(let duration):
+                self.step.duration = duration
+                if(self.step.duration != duration){
+                    self.error = .DURATION("Invalid input")
+                }
             case .DELETING:
                 StepDAO.delete(id: self.step.id, callback: {result in
                     DispatchQueue.main.async {
@@ -130,10 +130,12 @@ class StepViewModel: ObservableObject, StepObserver, Subscriber  {
                 StepDAO.addComponent(step: self.step, component: component, callback: { result in
                     DispatchQueue.main.async {
                         switch result {
-                            case .success(_):
+                            case .success(let step):
+                                self.components.set(components: step.components)
+                                self.components.stepComponentViewModelChanged()
                                 self.delegate?.stepViewModelChanged()
                             case .failure(let error):
-                            self.error = .COMPONENT(error.description)
+                                self.error = .COMPONENT(error.description)
                         }
                     }
                 })

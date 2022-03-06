@@ -31,23 +31,33 @@ struct ContentView: View {
                     }
                     .navigationViewStyle(StackNavigationViewStyle())
                     .tabItem{
-                        Image(systemName: "homekit")
-                        Text("Tableau de bord")
+                        VStack{
+                            Image(systemName: "homekit")
+                            Text("Tableau de bord")
+                        }
                     }
                     NavigationView {
                         RecipeListView()
                     }
                     .navigationViewStyle(StackNavigationViewStyle())
                     .tabItem{
-                        Image(systemName: "leaf")
+                        Image(systemName: "tortoise")
                         Text("Recettes")
+                    }
+                    NavigationView {
+                        RecipeCategoryListView()
+                    }
+                    .navigationViewStyle(StackNavigationViewStyle())
+                    .tabItem{
+                        Image(systemName: "tortoise.fill")
+                        Text("Catégories de recette")
                     }
                     NavigationView {
                         IngredientListView()
                     }
                     .navigationViewStyle(StackNavigationViewStyle())
                     .tabItem{
-                        Image(systemName: "leaf")
+                        Image(systemName: "pills")
                         Text("Ingrédients")
                     }
                     NavigationView {
@@ -55,7 +65,7 @@ struct ContentView: View {
                     }
                     .navigationViewStyle(StackNavigationViewStyle())
                     .tabItem{
-                        Image(systemName: "leaf")
+                        Image(systemName: "pills.fill")
                         Text("Catégories d'ingrédient")
                     }
                     NavigationView {
