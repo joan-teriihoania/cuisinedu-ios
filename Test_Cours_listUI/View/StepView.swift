@@ -69,14 +69,14 @@ struct StepView: View {
                                 showLoadingEdit = false
                                 DispatchQueue.main.async {
                                     switch result {
-                                    case .success(_):
-                                        self.toast = AlertToast(displayMode: .hud, type: .complete(.green), title: "Modifications enregistrées")
-                                        self.showToast.toggle()
-                                        self.viewModelOrigin.step.set(step: self.viewModel.step)
-                                        break
-                                    case .failure(let error):
-                                        self.message = error.description
-                                        self.showMessage = true
+                                        case .success(_):
+                                            self.toast = AlertToast(displayMode: .hud, type: .complete(.green), title: "Modifications enregistrées")
+                                            self.showToast.toggle()
+                                            self.viewModelOrigin.step.set(step: self.viewModel.step)
+                                            break
+                                        case .failure(let error):
+                                            self.message = error.description
+                                            self.showMessage = true
                                     }
                                 }
                             })

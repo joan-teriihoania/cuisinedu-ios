@@ -142,26 +142,40 @@ class RecipeViewModel: ObservableObject, RecipeObserver, Subscriber  {
             case .LIST_UPDATED:
                 self.delegate?.recipeViewModelChanged()
                 break
-        case .ADDING_STEP(let step, let position, let quantity):
-            RecipeDAO.addStep(recipe_id: self.recipe.id, step_id: step.id, position: position, quantity: quantity, callback: { result in
-                    DispatchQueue.main.async {
-                        switch result {
-                            case .success(_):
-                                self.delegate?.recipeViewModelChanged()
-                            case .failure(let error):
-                            self.error = .STEP(error.description)
+            case .ADDING_STEP(let step, let position, let quantity):
+                RecipeDAO.addStep(recipe_id: self.recipe.id, step_id: step.id, position: position, quantity: quantity, callback: { result in
+                        DispatchQueue.main.async {
+                            switch result {
+                                case .success(_):
+                                    self.steps.stepViewModelChanged()
+                                    self.delegate?.recipeViewModelChanged()
+                                case .failure(let error):
+                                    self.error = .STEP(error.description)
+                            }
                         }
-                    }
-                })
-            case .REMOVING_STEP(let step):
-                RecipeDAO.removeStep(recipe_id: self.recipe.id, step_id: step.id, callback: { result in
+                    })
+                case .REMOVING_STEP(let step):
+                    RecipeDAO.removeStep(recipe_id: self.recipe.id, step_id: step.id, callback: { result in
+                        DispatchQueue.main.async {
+                            switch result {
+                                case .success(_):
+                                    self.steps.stepDeleted(step: step)
+                                    self.delegate?.recipeViewModelChanged()
+                                case .failure(let error):
+                                    self.error = .STEP(error.description)
+                            }
+                        }
+                    })
+        case .EDITING_STEP(let step, let position, let quantity):
+            RecipeDAO.editStep(recipe_id: self.recipe.id, step_id: step.id, position: position, quantity: quantity, callback: { result in
                     DispatchQueue.main.async {
                         switch result {
-                            case .success(_):
-                                self.steps.stepDeleted(step: step)
+                            case .success(let recipe):
+                                self.steps.set(steps: recipe.steps)
+                                self.steps.stepViewModelChanged()
                                 self.delegate?.recipeViewModelChanged()
                             case .failure(let error):
-                            self.error = .STEP(error.description)
+                                self.error = .STEP(error.description)
                         }
                     }
                 })

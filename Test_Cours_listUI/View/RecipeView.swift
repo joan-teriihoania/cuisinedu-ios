@@ -20,7 +20,11 @@ struct RecipeView: View {
     @State var showLoadingDelete: Bool = false
     @State var showUnsavedChangesWarning: Bool = false
     
+    @State var showInsertStepsList: Bool = false
+    @State var stepsList: Steps = Steps(steps: [])
+    
     @State var showToast: Bool = false
+    @State var showToastUndismissable: Bool = false
     @State var toast: AlertToast = AlertToast(displayMode: .hud, type: .regular, title: "")
     
     init(vm: RecipeViewModel){
@@ -110,6 +114,23 @@ struct RecipeView: View {
                     .font(.largeTitle)
                     .bold()
                 Spacer()
+                Button(action: {
+                    self.toast = AlertToast(displayMode: .alert, type: .loading, title: "Chargement des étapes...", subTitle: "Veuillez patienter quelques instants")
+                    self.showToastUndismissable = true
+                    StepDAO.getAll(callback: { result in
+                        self.showToastUndismissable = false
+                        switch result {
+                            case .success(let steps):
+                                self.stepsList.set(steps: steps)
+                                self.showInsertStepsList = true
+                            case .failure(let error):
+                                self.toast = AlertToast(displayMode: .alert, type: .error(.red), title: "Erreur : Nous n'avons pas pu charger la liste d'étapes", subTitle: error.description)
+                                self.showToast = true
+                        }
+                    })
+                }, label: {
+                    Image(systemName: "plus")
+                })
                 EditButton()
             }
             
@@ -137,8 +158,28 @@ struct RecipeView: View {
                     .onDelete{ indexSet in
                         viewModel.steps.remove(atOffsets: indexSet)
                     }
+                    .onMove{ indexSet, toIndex in
+                        viewModel.steps.move(atOffsets: indexSet, toIndex: toIndex)
+                    }
                 }
-            }
+            }.popup(isPresented: $showInsertStepsList, type: .default, position: .bottom, closeOnTap: false, view: {
+                VStack {
+                    Text("Sélectionnez une étape à ajouter :")
+                    
+                    List{
+                        ForEach(stepsList.vms, id: \.step.id){
+                            vm in
+                            Button(vm.step.name, action: {
+                                self.intentOrigin.intentToAddStep(step: vm.step, position: viewModel.steps.data.count, quantity: 1)
+                                self.showInsertStepsList = false
+                            })
+                        }
+                    }
+                }
+                .padding()
+                .background(.white)
+                .cornerRadius(30)
+            }).padding()
         }
         .padding()
         .navigationTitle("Recette")
@@ -178,6 +219,8 @@ struct RecipeView: View {
                 self.mode.wrappedValue.dismiss()
             }
         }.toast(isPresenting: $showToast){
+            toast
+        }.toast(isPresenting: $showToastUndismissable, duration: 0, tapToDismiss: false){
             toast
         }.alert("\(message)", isPresented: $showMessage){
             Button("Ok", role: .cancel){

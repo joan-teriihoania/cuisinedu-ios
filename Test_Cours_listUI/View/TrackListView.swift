@@ -28,7 +28,7 @@ struct TrackListView: View {
                     }
                     .onMove {
                         indexSet, index in
-                        dataTrack.move(fromOffsets: indexSet , toOffset: index)
+                        dataTrack.move(atOffsets: indexSet , toOffset: index)
                     }
                 }
                 EditButton()

@@ -58,6 +58,17 @@ class RecipeDAO {
         })
     }
     
+    static func editStep(recipe_id: Int, step_id: Int, position: Int, quantity: Int, callback: @escaping (Result<Recipe, ApiServiceError>) -> Void){
+        ApiService.put(RecipeDTO.self, route: "/recipes/\(recipe_id)/steps/\(step_id)", parameters: [
+            "position": position,
+            "quantity": quantity
+        ], onsuccess: { recipe in
+            callback(.success(recipe.toRecipe()))
+        }, onerror: { (reason, response, error) in
+            callback(.failure(error == nil ? ApiServiceError.UNKNOWN(reason) : error as! ApiServiceError))
+        })
+    }
+    
     static func removeStep(recipe_id: Int, step_id: Int, callback: @escaping (Result<Recipe, ApiServiceError>) -> Void){
         ApiService.delete(RecipeDTO.self, route: "/recipes/\(recipe_id)/steps/\(step_id)", parameters: [:], onsuccess: { recipe in
             callback(.success(recipe.toRecipe()))

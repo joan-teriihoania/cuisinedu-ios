@@ -20,6 +20,7 @@ enum RecipeIntentState: Equatable, CustomStringConvertible {
     case CHANGING_CATEGORY(RecipeCategory)
     case ADDING_STEP(Step, Int, Int)
     case REMOVING_STEP(Step)
+    case EDITING_STEP(Step, Int, Int)
     case DELETING
     case LIST_UPDATED
     
@@ -39,6 +40,8 @@ enum RecipeIntentState: Equatable, CustomStringConvertible {
                 return "Adding \(quantity) \(step.name) at position \(position)"
             case .REMOVING_STEP(let step):
                 return "Removing \(step.name)"
+            case .EDITING_STEP(let step, let position, let quantity):
+                return "Editing \(quantity) \(step.name) to position \(position)"
             case .DELETING:
                 return "Deleting"
             case .LIST_UPDATED:
@@ -57,6 +60,11 @@ class RecipeIntent: ObservableObject {
     
     func intentToRemoveStep(step: Step){
         self.state.send(.REMOVING_STEP(step))
+        self.state.send(.LIST_UPDATED)
+    }
+    
+    func intentToEditStep(step: Step, position: Int, quantity: Int){
+        self.state.send(.EDITING_STEP(step, position, quantity))
         self.state.send(.LIST_UPDATED)
     }
     

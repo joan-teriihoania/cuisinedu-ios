@@ -15,9 +15,9 @@ class Tracks: ObservableObject, TrackViewModelDelegate {
         objectWillChange.send()
     }
     
-    func move(fromOffsets: IndexSet, toOffset: Int){
-        data.move(fromOffsets: fromOffsets, toOffset: toOffset)
-        vms.move(fromOffsets: fromOffsets, toOffset: toOffset)
+    func move(atOffsets: IndexSet, toOffset: Int){
+        data.move(fromOffsets: atOffsets, toOffset: toOffset)
+        vms.move(fromOffsets: atOffsets, toOffset: toOffset)
     }
     
     func remove(atOffsets: IndexSet){

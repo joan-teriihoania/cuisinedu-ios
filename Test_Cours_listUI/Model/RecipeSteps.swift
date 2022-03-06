@@ -49,6 +49,17 @@ class RecipeSteps: ObservableObject, StepViewModelDelegate {
         }
     }
     
+    func move(atOffsets: IndexSet, toIndex: Int){
+        self.data.move(fromOffsets: atOffsets, toOffset: toIndex)
+        self.vms.move(fromOffsets: atOffsets, toOffset: toIndex)
+        
+        for i in 0..<self.vms.count {
+            let intent = RecipeIntent()
+            intent.addObserver(vm: self.vm)
+            intent.intentToEditStep(step: self.data[i].step, position: i, quantity: self.data[i].quantity)
+        }
+    }
+    
     func remove(atIndex: Int){
         self.data.remove(at: atIndex)
         self.vms.remove(at: atIndex)
