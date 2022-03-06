@@ -36,23 +36,83 @@ struct StepView: View {
     }
 
     var body: some View {
-        Form {
-            TextField("", text: $viewModel.name, prompt: Text("Nom de l'étape"))
-                .onSubmit {
-                    intent.intentToChange(name: viewModel.name)
+        VStack {
+            Form {
+                TextField("", text: $viewModel.name, prompt: Text("Nom de l'étape"))
+                    .onSubmit {
+                        intent.intentToChange(name: viewModel.name)
+                    }
+                TextField("", text: $viewModel.description, prompt: Text("Description de l'étape"))
+                    .onSubmit {
+                        intent.intentToChange(description: viewModel.description)
+                    }
+                TextField("", value: $viewModel.duration, format: .number, prompt: Text("Durée de l'étape"))
+                    .onSubmit {
+                        intent.intentToChange(duration: viewModel.duration)
+                    }
+                
+                Section{
+                    HStack{
+                        Button(action: {}){
+                            if(self.showLoadingEdit){
+                                ProgressView()
+                                    .progressViewStyle(CircularProgressViewStyle())
+                            } else {
+                                Image(systemName: "paperplane")
+                            }
+                            Text("Enregistrer")
+                        }
+                        .foregroundColor(Color.blue)
+                        .onTapGesture {
+                            showLoadingEdit = true
+                            StepDAO.put(step: viewModel.step, callback: { result in
+                                showLoadingEdit = false
+                                DispatchQueue.main.async {
+                                    switch result {
+                                    case .success(_):
+                                        self.toast = AlertToast(displayMode: .hud, type: .complete(.green), title: "Modifications enregistrées")
+                                        self.showToast.toggle()
+                                        self.viewModelOrigin.step.set(step: self.viewModel.step)
+                                        break
+                                    case .failure(let error):
+                                        self.message = error.description
+                                        self.showMessage = true
+                                    }
+                                }
+                            })
+                        }
+                        
+                        Spacer()
+                        
+                        Button(action: {}){
+                            if(self.showLoadingDelete){
+                                ProgressView()
+                                    .progressViewStyle(CircularProgressViewStyle())
+                            } else {
+                                Image(systemName: "trash")
+                            }
+                            Text("Supprimer")
+                        }
+                        .foregroundColor(Color.red)
+                        .onTapGesture {
+                            showLoadingDelete = true
+                            intent.intentToDelete()
+                        }
+                    }
                 }
-            TextField("", text: $viewModel.description, prompt: Text("Description de l'étape"))
-                .onSubmit {
-                    intent.intentToChange(description: viewModel.description)
-                }
-            TextField("", value: $viewModel.duration, format: .number, prompt: Text("Durée de l'étape"))
-                .onSubmit {
-                    intent.intentToChange(duration: viewModel.duration)
-                }
-
-            VStack {
-                Text("Composants : ")
+            }
+            
+            Divider()
+            
+            HStack {
+                Text("Composants")
+                    .font(.largeTitle)
+                    .bold()
                     .padding()
+                Spacer()
+                EditButton()
+            }
+            VStack {
                 if viewModel.components.data.count == 0 {
                     Text("Cette étape ne contient pas de composants")
                 }
@@ -112,58 +172,8 @@ struct StepView: View {
                     }
                 }
             }
-            
-            
-            Section{
-                HStack{
-                    Button(action: {}){
-                        if(self.showLoadingEdit){
-                            ProgressView()
-                                .progressViewStyle(CircularProgressViewStyle())
-                        } else {
-                            Image(systemName: "paperplane")
-                        }
-                        Text("Enregistrer")
-                    }
-                    .foregroundColor(Color.blue)
-                    .onTapGesture {
-                        showLoadingEdit = true
-                        StepDAO.put(step: viewModel.step, callback: { result in
-                            showLoadingEdit = false
-                            DispatchQueue.main.async {
-                                switch result {
-                                case .success(_):
-                                    self.toast = AlertToast(displayMode: .hud, type: .complete(.green), title: "Modifications enregistrées")
-                                    self.showToast.toggle()
-                                    self.viewModelOrigin.step.set(step: self.viewModel.step)
-                                    break
-                                case .failure(let error):
-                                    self.message = error.description
-                                    self.showMessage = true
-                                }
-                            }
-                        })
-                    }
-                    
-                    Spacer()
-                    
-                    Button(action: {}){
-                        if(self.showLoadingDelete){
-                            ProgressView()
-                                .progressViewStyle(CircularProgressViewStyle())
-                        } else {
-                            Image(systemName: "trash")
-                        }
-                        Text("Supprimer")
-                    }
-                    .foregroundColor(Color.red)
-                    .onTapGesture {
-                        showLoadingDelete = true
-                        intent.intentToDelete()
-                    }
-                }
-            }
         }
+        .padding()
         .navigationTitle("Etape")
         .navigationBarBackButtonHidden(true)
         .navigationBarItems(leading: Button(action : {

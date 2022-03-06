@@ -12,8 +12,9 @@ class RecipeSteps: ObservableObject, StepViewModelDelegate {
         self.objectWillChange.send()
     }
     
-    func stepDeleted(step: Step) {
+    func getIndexOf(step: Step) -> Int?{
         var index: Int?
+        
         for i in 0..<self.data.count {
             let d = self.data[i]
             if d.step.equal(step: step){
@@ -21,9 +22,14 @@ class RecipeSteps: ObservableObject, StepViewModelDelegate {
                 break
             }
         }
-        if index != nil {
-            self.data.remove(at: index!)
-            self.vms.remove(at: index!)
+        
+        return index
+    }
+    
+    func stepDeleted(step: Step) {
+        if let index = getIndexOf(step: step) {
+            self.data.remove(at: index)
+            self.vms.remove(at: index)
         }
     }
     

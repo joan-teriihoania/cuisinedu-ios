@@ -142,6 +142,7 @@ class StepViewModel: ObservableObject, StepObserver, Subscriber  {
                     DispatchQueue.main.async {
                         switch result {
                             case .success(_):
+                                self.components.remove(atIndex: self.components.data.firstIndex(of: component)!)
                                 self.delegate?.stepViewModelChanged()
                             case .failure(let error):
                             self.error = .COMPONENT(error.description)

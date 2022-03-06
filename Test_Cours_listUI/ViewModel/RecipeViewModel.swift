@@ -38,19 +38,27 @@ enum RecipeError: Error, Equatable, CustomStringConvertible {
 
 class RecipeViewModel: ObservableObject, RecipeObserver, Subscriber  {
     func recipeChanged(name: String) {
-        self.name = name
+        DispatchQueue.main.async {
+            self.name = name
+        }
     }
     
     func recipeChanged(nb_couvert: Int) {
-        self.nb_couvert = nb_couvert
+        DispatchQueue.main.async {
+            self.nb_couvert = nb_couvert
+        }
     }
     
     func recipeChanged(user: User) {
-        self.user = user
+        DispatchQueue.main.async {
+            self.user = user
+        }
     }
     
     func recipeChanged(category: RecipeCategory) {
-        self.category = category
+        DispatchQueue.main.async {
+            self.category = category
+        }
     }
     
     func recipeChanged(steps: [RecipeStepQuantity]) {
@@ -150,6 +158,7 @@ class RecipeViewModel: ObservableObject, RecipeObserver, Subscriber  {
                     DispatchQueue.main.async {
                         switch result {
                             case .success(_):
+                                self.steps.stepDeleted(step: step)
                                 self.delegate?.recipeViewModelChanged()
                             case .failure(let error):
                             self.error = .STEP(error.description)

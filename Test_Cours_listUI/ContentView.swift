@@ -35,6 +35,14 @@ struct ContentView: View {
                         Text("Tableau de bord")
                     }
                     NavigationView {
+                        RecipeListView()
+                    }
+                    .navigationViewStyle(StackNavigationViewStyle())
+                    .tabItem{
+                        Image(systemName: "leaf")
+                        Text("Recettes")
+                    }
+                    NavigationView {
                         IngredientListView()
                     }
                     .navigationViewStyle(StackNavigationViewStyle())

@@ -36,25 +36,84 @@ struct RecipeView: View {
     }
 
     var body: some View {
-        Form {
-            TextField("", text: $viewModel.name, prompt: Text("Nom de la recette"))
-                .onSubmit {
-                    intent.intentToChange(name: viewModel.name)
+        VStack {
+            Form {
+                TextField("", text: $viewModel.name, prompt: Text("Nom de la recette"))
+                    .onSubmit {
+                        intent.intentToChange(name: viewModel.name)
+                    }
+                TextField("", value: $viewModel.nb_couvert, format: .number, prompt: Text("Nombre de couvert"))
+                    .onSubmit {
+                        intent.intentToChange(nb_couvert: viewModel.nb_couvert)
+                    }
+                
+                HStack {
+                    Text("Catégorie : ")
+                    Spacer()
+                    NavigationLink("\(viewModel.category.name)", destination: RecipeCategoryView(vm: RecipeCategoryViewModel(rc: viewModel.category)))
                 }
-            TextField("", value: $viewModel.nb_couvert, format: .number, prompt: Text("Nombre de couvert"))
-                .onSubmit {
-                    intent.intentToChange(nb_couvert: viewModel.nb_couvert)
+                
+                Section{
+                    HStack{
+                        Button(action: {}){
+                            if(self.showLoadingEdit){
+                                ProgressView()
+                                    .progressViewStyle(CircularProgressViewStyle())
+                            } else {
+                                Image(systemName: "paperplane")
+                            }
+                            Text("Enregistrer")
+                        }
+                        .foregroundColor(Color.blue)
+                        .onTapGesture {
+                            showLoadingEdit = true
+                            RecipeDAO.put(recipe: viewModel.recipe, callback: { result in
+                                showLoadingEdit = false
+                                DispatchQueue.main.async {
+                                    switch result {
+                                    case .success(_):
+                                        self.toast = AlertToast(displayMode: .hud, type: .complete(.green), title: "Modifications enregistrées")
+                                        self.showToast.toggle()
+                                        break
+                                    case .failure(let error):
+                                        self.message = error.description
+                                        self.showMessage = true
+                                    }
+                                }
+                            })
+                        }
+                        
+                        Spacer()
+                        
+                        Button(action: {}){
+                            if(self.showLoadingDelete){
+                                ProgressView()
+                                    .progressViewStyle(CircularProgressViewStyle())
+                            } else {
+                                Image(systemName: "trash")
+                            }
+                            Text("Supprimer")
+                        }
+                        .foregroundColor(Color.red)
+                        .onTapGesture {
+                            showLoadingDelete = true
+                            intent.intentToDelete()
+                        }
+                    }
                 }
+            }
+            
+            Divider()
             
             HStack {
-                Text("Catégorie : ")
+                Text("Etapes")
+                    .font(.largeTitle)
+                    .bold()
                 Spacer()
-                NavigationLink("\(viewModel.category.name)", destination: RecipeCategoryView(vm: RecipeCategoryViewModel(rc: viewModel.category)))
+                EditButton()
             }
-
+            
             VStack {
-                Text("Etapes : ")
-                    .padding()
                 if viewModel.steps.data.count == 0 {
                     Text("Cette recette ne contient pas d'étapes")
                 }
@@ -80,58 +139,9 @@ struct RecipeView: View {
                     }
                 }
             }
-            
-            
-            Section{
-                HStack{
-                    Button(action: {}){
-                        if(self.showLoadingEdit){
-                            ProgressView()
-                                .progressViewStyle(CircularProgressViewStyle())
-                        } else {
-                            Image(systemName: "paperplane")
-                        }
-                        Text("Enregistrer")
-                    }
-                    .foregroundColor(Color.blue)
-                    .onTapGesture {
-                        showLoadingEdit = true
-                        RecipeDAO.put(recipe: viewModel.recipe, callback: { result in
-                            showLoadingEdit = false
-                            DispatchQueue.main.async {
-                                switch result {
-                                case .success(_):
-                                    self.toast = AlertToast(displayMode: .hud, type: .complete(.green), title: "Modifications enregistrées")
-                                    self.showToast.toggle()
-                                    break
-                                case .failure(let error):
-                                    self.message = error.description
-                                    self.showMessage = true
-                                }
-                            }
-                        })
-                    }
-                    
-                    Spacer()
-                    
-                    Button(action: {}){
-                        if(self.showLoadingDelete){
-                            ProgressView()
-                                .progressViewStyle(CircularProgressViewStyle())
-                        } else {
-                            Image(systemName: "trash")
-                        }
-                        Text("Supprimer")
-                    }
-                    .foregroundColor(Color.red)
-                    .onTapGesture {
-                        showLoadingDelete = true
-                        intent.intentToDelete()
-                    }
-                }
-            }
         }
-        .navigationTitle("Etape")
+        .padding()
+        .navigationTitle("Recette")
         .navigationBarBackButtonHidden(true)
         .navigationBarItems(leading: Button(action : {
             if(!viewModelOrigin.recipe.equal(recipe: viewModel.recipe)){
