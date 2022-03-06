@@ -110,6 +110,7 @@
 		6FC65EBA27D4EC2800C1F0CE /* Recipes.swift in Sources */ = {isa = PBXBuildFile; fileRef = 6FC65EB927D4EC2800C1F0CE /* Recipes.swift */; };
 		6FC65EBC27D523CC00C1F0CE /* RecipeCategoryListView.swift in Sources */ = {isa = PBXBuildFile; fileRef = 6FC65EBB27D523CC00C1F0CE /* RecipeCategoryListView.swift */; };
 		6FC65EBE27D5249600C1F0CE /* RecipeCategories.swift in Sources */ = {isa = PBXBuildFile; fileRef = 6FC65EBD27D5249600C1F0CE /* RecipeCategories.swift */; };
+		6FC65EC027D5367C00C1F0CE /* README.md in Resources */ = {isa = PBXBuildFile; fileRef = 6FC65EBF27D5367C00C1F0CE /* README.md */; };
 /* End PBXBuildFile section */
 
 /* Begin PBXContainerItemProxy section */
@@ -234,6 +235,7 @@
 		6FC65EB927D4EC2800C1F0CE /* Recipes.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = Recipes.swift; sourceTree = "<group>"; };
 		6FC65EBB27D523CC00C1F0CE /* RecipeCategoryListView.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = RecipeCategoryListView.swift; sourceTree = "<group>"; };
 		6FC65EBD27D5249600C1F0CE /* RecipeCategories.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = RecipeCategories.swift; sourceTree = "<group>"; };
+		6FC65EBF27D5367C00C1F0CE /* README.md */ = {isa = PBXFileReference; lastKnownFileType = net.daringfireball.markdown; path = README.md; sourceTree = "<group>"; };
 /* End PBXFileReference section */
 
 /* Begin PBXFrameworksBuildPhase section */
@@ -266,6 +268,7 @@
 		0C0E6C8D27B2524800765B38 = {
 			isa = PBXGroup;
 			children = (
+				6FC65EBF27D5367C00C1F0CE /* README.md */,
 				6F0EC77A27BD304700F1BDD0 /* Ressources */,
 				0C0E6C9827B2524800765B38 /* Test_Cours_listUI */,
 				0C0E6CA927B2524800765B38 /* Test_Cours_listUITests */,
@@ -591,6 +594,7 @@
 			files = (
 				0C0E6CA127B2524800765B38 /* Preview Assets.xcassets in Resources */,
 				0C0E6C9E27B2524800765B38 /* Assets.xcassets in Resources */,
+				6FC65EC027D5367C00C1F0CE /* README.md in Resources */,
 				6F0EC78E27BE48D700F1BDD0 /* api_config.json in Resources */,
 				6F0EC77C27BD306A00F1BDD0 /* playlist.json in Resources */,
 			);
