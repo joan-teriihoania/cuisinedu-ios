@@ -6,6 +6,7 @@
 //
 
 import AlertToast
+import PopupView
 import SwiftUI
 
 struct IngredientView: View {
@@ -20,13 +21,17 @@ struct IngredientView: View {
     @State var showLoadingDelete: Bool = false
     @State var showUnsavedChangesWarning: Bool = false
     
+    @State var showInsertAllergeneList: Bool = false
+    @State var allergenesList: Allergenes = Allergenes(allergenes: [])
+
+    @State var showToastUndismissable: Bool = false
     @State var showToast: Bool = false
     @State var toast: AlertToast = AlertToast(displayMode: .hud, type: .regular, title: "")
     
     init(vm: IngredientViewModel){
         self.intent = IngredientIntent()
-        self.intentOrigin = IngredientIntent(
-        )
+        self.intentOrigin = IngredientIntent()
+        
         self.viewModelOrigin = vm
         self.viewModel = IngredientViewModel(ingredient: vm.ingredient.clone())
         
@@ -116,12 +121,24 @@ struct IngredientView: View {
                 Text("Allergènes").font(.largeTitle).bold()
                 Spacer()
                 Button(action: {
-                    
+                    self.toast = AlertToast(displayMode: .alert, type: .loading, title: "Chargement des allergènes...", subTitle: "Veuillez patienter quelques instants")
+                    self.showToastUndismissable = true
+                    AllergeneDAO.getAll(callback: { result in
+                        self.showToastUndismissable = false
+                        switch result {
+                            case .success(let allergenes):
+                                self.allergenesList.set(allergenes: allergenes)
+                                self.showInsertAllergeneList = true
+                            case .failure(let error):
+                                self.toast = AlertToast(displayMode: .alert, type: .error(.red), title: "Erreur : Nous n'avons pas pu charger la liste d'allergène", subTitle: error.description)
+                                self.showToast = true
+                        }
+                    })
                 }, label: {
                     Image(systemName: "plus")
                 })
                 EditButton()
-            }.padding()
+            }
             VStack {
                 if viewModel.allergenes.data.count == 0 {
                     Text("Cet ingrédient ne contient pas d'allergène")
@@ -147,8 +164,26 @@ struct IngredientView: View {
                         viewModel.allergenes.remove(atOffsets: indexSet)
                     }
                 }
-            }
+            }.popup(isPresented: $showInsertAllergeneList, type: .default, position: .bottom, closeOnTap: false, view: {
+                VStack {
+                    Text("Sélectionnez un allergène à ajouter :")
+                    
+                    List{
+                        ForEach(allergenesList.vms, id: \.allergene.id){
+                            vm in
+                            Button(vm.allergene.name, action: {
+                                self.intentOrigin.intentToAddAllergene(allergene: vm.allergene)
+                                self.showInsertAllergeneList = false
+                            })
+                        }
+                    }
+                }
+                .padding()
+                .background(.white)
+                .cornerRadius(30)
+            }).padding()
         }
+        .padding()
         .navigationTitle("Ingrédient")
         .navigationBarBackButtonHidden(true)
         .navigationBarItems(leading: Button(action : {
@@ -189,6 +224,8 @@ struct IngredientView: View {
                 self.mode.wrappedValue.dismiss()
             }
         }.toast(isPresenting: $showToast){
+            toast
+        }.toast(isPresenting: $showToastUndismissable, duration: 0, tapToDismiss: false){
             toast
         }.alert("\(message)", isPresented: $showMessage){
             Button("Ok", role: .cancel){

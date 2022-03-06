@@ -80,6 +80,7 @@ class UnitViewModel: ObservableObject, UnitObserver, Subscriber {
                                 break
                             case .failure(let error):
                                 self.error = .DELETE(error.description)
+                                self.delegate?.unitViewModelChanged()
                         }
                     }
                 })

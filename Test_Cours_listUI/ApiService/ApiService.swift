@@ -65,7 +65,7 @@ enum ApiServiceError: Error {
             case .INTERNAL_ERROR(let r):
                 return "Erreur interne: \(r)"
             case .UNKNOWN(let r):
-                return "Erreur: \(r)"
+                return "\(r)"
         }
     }
 }

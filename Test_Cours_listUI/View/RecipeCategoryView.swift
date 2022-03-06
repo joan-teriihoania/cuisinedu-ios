@@ -8,12 +8,12 @@
 import AlertToast
 import SwiftUI
 
-struct UnitView: View {
+struct RecipeCategoryView: View {
     @Environment(\.presentationMode) var mode: Binding<PresentationMode>
-    var intent: UnitIntent
-    var intentOrigin: UnitIntent
-    @ObservedObject var viewModel: UnitViewModel
-    @ObservedObject var viewModelOrigin: UnitViewModel
+    var intent: RecipeCategoryIntent
+    @ObservedObject var viewModel: RecipeCategoryViewModel
+    @ObservedObject var viewModelOrigin: RecipeCategoryViewModel
+    @State var hasUnsavedChanges: Bool = true
     @State var message: String = ""
     @State var showMessage: Bool = false
     @State var showLoadingEdit: Bool = false
@@ -23,25 +23,20 @@ struct UnitView: View {
     @State var showToast: Bool = false
     @State var toast: AlertToast = AlertToast(displayMode: .hud, type: .regular, title: "")
     
-    init(vm: UnitViewModel){
-        self.intent = UnitIntent()
-        self.intentOrigin = UnitIntent()
-        
+    init(vm: RecipeCategoryViewModel){
+        self.intent = RecipeCategoryIntent()
         self.viewModelOrigin = vm
-        self.viewModel = UnitViewModel(unit: vm.unit.clone())
-        
+        self.viewModel = RecipeCategoryViewModel(rc: vm.rc.clone())
         self.intent.addObserver(vm: self.viewModel)
-        self.intentOrigin.addObserver(vm: self.viewModelOrigin)
-        self.intentOrigin.addObserver(vm: self.viewModel)
     }
 
     var body: some View {
         Form {
-            TextField("", text: $viewModel.name, prompt: Text("Nom de l'unité"))
+            TextField("", text: $viewModel.name, prompt: Text("Nom de la catégorie d'ingrédient"))
                 .onSubmit {
                     intent.intentToChange(name: viewModel.name)
                 }
-            
+        
             Section{
                 HStack{
                     Button(action: {}){
@@ -56,14 +51,14 @@ struct UnitView: View {
                     .foregroundColor(Color.blue)
                     .onTapGesture {
                         showLoadingEdit = true
-                        UnitDAO.put(unit: viewModel.unit, callback: {result in
+                        RecipeCategoryDAO.put(rc: viewModel.rc, callback: {result in
                             showLoadingEdit = false
                             DispatchQueue.main.async {
                                 switch result {
                                     case .success(_):
                                         self.toast = AlertToast(displayMode: .hud, type: .complete(.green), title: "Modifications enregistrées")
                                         self.showToast.toggle()
-                                        self.viewModelOrigin.unit.set(unit: self.viewModel.unit)
+                                        self.viewModelOrigin.rc.set(rc: self.viewModel.rc)
                                         break
                                     case .failure(let error):
                                         self.message = error.description
@@ -87,15 +82,15 @@ struct UnitView: View {
                     .foregroundColor(Color.red)
                     .onTapGesture {
                         showLoadingDelete = true
-                        intentOrigin.intentToDelete()
+                        intent.intentToDelete()
                     }
                 }
             }
         }
-        .navigationTitle("Unité")
+        .navigationTitle("Catégorie d'ingrédient")
         .navigationBarBackButtonHidden(true)
         .navigationBarItems(leading: Button(action : {
-            if(!viewModelOrigin.unit.equal(unit: viewModel.unit)){
+            if(!viewModelOrigin.rc.equal(rc: viewModel.rc)){
                 self.showUnsavedChangesWarning = true
             } else {
                 self.mode.wrappedValue.dismiss()
@@ -113,7 +108,6 @@ struct UnitView: View {
                 case .DELETE(let reason):
                     self.message = reason
                     self.showMessage = true
-                    self.showLoadingDelete = false
             }
         }.onChange(of: viewModel.deleted){ deleted in
             if deleted {

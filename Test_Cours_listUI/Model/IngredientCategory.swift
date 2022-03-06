@@ -15,7 +15,11 @@ enum IngredientCategoryPropertyChange {
     case NAME(String)
 }
 
-class IngredientCategory {
+class IngredientCategory: Equatable {
+    static func == (lhs: IngredientCategory, rhs: IngredientCategory) -> Bool {
+        return lhs.equal(ic: rhs)
+    }
+    
     var id: Int
     var name: String {
         didSet {

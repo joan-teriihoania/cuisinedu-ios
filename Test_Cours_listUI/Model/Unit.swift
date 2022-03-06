@@ -15,7 +15,11 @@ protocol UnitObserver {
     func unitChanged(name: String)
 }
 
-class Unit {
+class Unit: Equatable {
+    static func == (lhs: Unit, rhs: Unit) -> Bool {
+        return lhs.equal(unit: rhs)
+    }
+    
     var id: Int
     var name: String {
         didSet {

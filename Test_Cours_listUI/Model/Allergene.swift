@@ -15,7 +15,7 @@ protocol AllergeneObserver {
     func allergeneChanged(name: String)
 }
 
-class Allergene: Equatable {
+class Allergene: Equatable, Identifiable {
     static func == (lhs: Allergene, rhs: Allergene) -> Bool {
         return lhs.equal(allergene: rhs)
     }

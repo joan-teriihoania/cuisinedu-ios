@@ -23,7 +23,55 @@ enum IngredientPropertyChange {
     case ALLERGENES
 }
 
-class Ingredient: ObservableObject, UnitObserver, IngredientCategoryObserver, Equatable, AllergeneObserver {
+class Ingredient: ObservableObject, UnitObserver, IngredientCategoryObserver, Equatable, AllergeneObserver, StepComponentAble {
+    var stepComponentAbleObservers: [StepComponentAbleObserver] = []
+    
+    func addObserver(obs: StepComponentAbleObserver) {
+        stepComponentAbleObservers.append(obs)
+    }
+    
+    func setComponent(_ c: StepComponentAble) {
+        switch c.getObject() {
+            case .INGREDIENT(let ingredient):
+                self.set(ingredient: ingredient)
+            default:
+                break
+        }
+    }
+    
+    func equalComponent(_ c: StepComponentAble) -> Bool {
+        switch c.getObject() {
+            case .INGREDIENT(let ingredient):
+                return self.equal(ingredient: ingredient)
+            default:
+                return false
+        }
+    }
+    
+    func cloneComponent() -> StepComponentAble {
+        return clone()
+    }
+    
+    func getIngredients() -> [Ingredient] {
+        return [self]
+    }
+    
+    func getName() -> String {
+        return name
+    }
+    
+    func getDescription() -> String {
+        return description
+    }
+    
+    func getDuration() -> Double {
+        return 0
+    }
+    
+    func getObject() -> StepComponentEnum {
+        return .INGREDIENT(self)
+    }
+    
     func allergeneChanged(name: String) {
         notifyObservers(t: .ALLERGENES)
     }
@@ -100,6 +148,10 @@ class Ingredient: ObservableObject, UnitObserver, IngredientCategoryObserver, Eq
     }
     
     func notifyObservers(t: IngredientPropertyChange){
+        for observer in stepComponentAbleObservers {
+            observer.stepComponentAbleChanged(component: self)
+        }
+        
         for observer in observers {
             switch t {
                 case .UNIT:

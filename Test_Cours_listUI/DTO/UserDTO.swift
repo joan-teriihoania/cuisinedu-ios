@@ -8,6 +8,7 @@
 import Foundation
 
 class UserDTO: ObservableObject, Decodable {
+    @Published var id: Int
     @Published var username: String
     @Published var email: String
     @Published var avatarURL: String
@@ -16,17 +17,19 @@ class UserDTO: ObservableObject, Decodable {
         case username = "username"
         case email = "email"
         case avatarURL = "img_profile"
+        case id = "user_id"
     }
     
     required init(from decoder: Decoder) throws {
         let values = try decoder.container(keyedBy: CodingKeys.self)
+        id = try values.decode(Int.self, forKey: .id)
         username = try values.decode(String.self, forKey: .username)
         email = try values.decode(String.self, forKey: .email)
         avatarURL = try values.decode(String.self, forKey: .avatarURL)
     }
     
     func toUser() -> User {
-        return User(username: username, email: email, avatarURL: avatarURL)
+        return User(id: id, username: username, email: email, avatarURL: avatarURL)
     }
     
     static func toUser(userDTOs: [UserDTO]) -> [User]{

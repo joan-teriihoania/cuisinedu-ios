@@ -2,18 +2,18 @@
 //  trackView.swift
 //  Test_Cours_listUI
 //
-//  Created by Vincent Baret on 08/02/2022.
+//  Created by m1 on 08/02/2022.
 //
 
 import AlertToast
 import SwiftUI
 
-struct UnitView: View {
+struct StepComponentView: View {
     @Environment(\.presentationMode) var mode: Binding<PresentationMode>
-    var intent: UnitIntent
-    var intentOrigin: UnitIntent
-    @ObservedObject var viewModel: UnitViewModel
-    @ObservedObject var viewModelOrigin: UnitViewModel
+    var intent: StepComponentIntent
+    var intentOrigin: StepComponentIntent
+    @ObservedObject var viewModel: StepComponentViewModel
+    @ObservedObject var viewModelOrigin: StepComponentViewModel
     @State var message: String = ""
     @State var showMessage: Bool = false
     @State var showLoadingEdit: Bool = false
@@ -23,12 +23,12 @@ struct UnitView: View {
     @State var showToast: Bool = false
     @State var toast: AlertToast = AlertToast(displayMode: .hud, type: .regular, title: "")
     
-    init(vm: UnitViewModel){
-        self.intent = UnitIntent()
-        self.intentOrigin = UnitIntent()
+    init(vm: StepComponentViewModel){
+        self.intent = StepComponentIntent()
+        self.intentOrigin = StepComponentIntent()
         
         self.viewModelOrigin = vm
-        self.viewModel = UnitViewModel(unit: vm.unit.clone())
+        self.viewModel = StepComponentViewModel(component: vm.stepComponent.clone())
         
         self.intent.addObserver(vm: self.viewModel)
         self.intentOrigin.addObserver(vm: self.viewModelOrigin)
@@ -37,10 +37,24 @@ struct UnitView: View {
 
     var body: some View {
         Form {
-            TextField("", text: $viewModel.name, prompt: Text("Nom de l'unité"))
+            TextField("", value: $viewModel.quantity, format: .number, prompt: Text("Quantité"))
                 .onSubmit {
-                    intent.intentToChange(name: viewModel.name)
+                    intent.intentToChange(quantity: viewModel.quantity)
                 }
+            
+            HStack {
+                Text("Composant : ")
+                Spacer()
+                switch viewModel.component.getObject() {
+                    case .STEP(let step):
+                        NavigationLink("Etape - \(step.name)", destination: StepView(vm: StepViewModel(step: step)))
+                    case .RECIPE(let recipe):
+                        NavigationLink("Recette - \(recipe.name)", destination: RecipeView(vm: RecipeViewModel(recipe: recipe)))
+                    case .INGREDIENT(let ingredient):
+                        NavigationLink("Ingrédient - \(ingredient.name)", destination: IngredientView(vm: IngredientViewModel(ingredient: ingredient)))
+                }
+            }
+            
             
             Section{
                 HStack{
@@ -56,18 +70,17 @@ struct UnitView: View {
                     .foregroundColor(Color.blue)
                     .onTapGesture {
                         showLoadingEdit = true
-                        UnitDAO.put(unit: viewModel.unit, callback: {result in
+                        StepComponentDAO.put(step: viewModel.stepComponent, callback: { result in
                             showLoadingEdit = false
                             DispatchQueue.main.async {
                                 switch result {
-                                    case .success(_):
-                                        self.toast = AlertToast(displayMode: .hud, type: .complete(.green), title: "Modifications enregistrées")
-                                        self.showToast.toggle()
-                                        self.viewModelOrigin.unit.set(unit: self.viewModel.unit)
-                                        break
-                                    case .failure(let error):
-                                        self.message = error.description
-                                        self.showMessage = true
+                                case .success(_):
+                                    self.toast = AlertToast(displayMode: .hud, type: .complete(.green), title: "Modifications enregistrées")
+                                    self.showToast.toggle()
+                                    break
+                                case .failure(let error):
+                                    self.message = error.description
+                                    self.showMessage = true
                                 }
                             }
                         })
@@ -92,10 +105,10 @@ struct UnitView: View {
                 }
             }
         }
-        .navigationTitle("Unité")
+        .navigationTitle("Composant d'étape")
         .navigationBarBackButtonHidden(true)
         .navigationBarItems(leading: Button(action : {
-            if(!viewModelOrigin.unit.equal(unit: viewModel.unit)){
+            if(!viewModelOrigin.stepComponent.equal(component: viewModel.stepComponent)){
                 self.showUnsavedChangesWarning = true
             } else {
                 self.mode.wrappedValue.dismiss()
@@ -107,7 +120,10 @@ struct UnitView: View {
             switch error {
                 case .NONE:
                     return
-                case .NAME(let reason):
+                case .QUANTITY(let reason):
+                    self.message = reason
+                    self.showMessage = true
+                case .COMPONENT(let reason):
                     self.message = reason
                     self.showMessage = true
                 case .DELETE(let reason):

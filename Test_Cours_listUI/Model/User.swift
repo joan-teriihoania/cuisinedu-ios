@@ -8,11 +8,13 @@
 import Foundation
 
 class User: ObservableObject {
+    var id: Int
     @Published var username: String
     @Published var email: String
     @Published var avatarURL: String
     
-    init(username: String, email: String, avatarURL: String){
+    init(id: Int, username: String, email: String, avatarURL: String){
+        self.id = id
         self.username = username
         self.email = email
         self.avatarURL = avatarURL

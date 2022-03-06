@@ -26,11 +26,14 @@ struct ContentView: View {
         if session.isLogged(){
             return AnyView(
                 TabView{
-                    Text("Home")
-                        .tabItem{
-                            Image(systemName: "homekit")
-                            Text("Home page")
-                        }
+                    NavigationView {
+                        DashboardView()
+                    }
+                    .navigationViewStyle(StackNavigationViewStyle())
+                    .tabItem{
+                        Image(systemName: "homekit")
+                        Text("Tableau de bord")
+                    }
                     NavigationView {
                         IngredientListView()
                     }
@@ -38,6 +41,22 @@ struct ContentView: View {
                     .tabItem{
                         Image(systemName: "leaf")
                         Text("Ingrédients")
+                    }
+                    NavigationView {
+                        IngredientCategoryListView()
+                    }
+                    .navigationViewStyle(StackNavigationViewStyle())
+                    .tabItem{
+                        Image(systemName: "leaf")
+                        Text("Catégories d'ingrédient")
+                    }
+                    NavigationView {
+                        UnitListView()
+                    }
+                    .navigationViewStyle(StackNavigationViewStyle())
+                    .tabItem{
+                        Image(systemName: "lineweight")
+                        Text("Unités")
                     }
                     NavigationView{
                         AllergeneListView()

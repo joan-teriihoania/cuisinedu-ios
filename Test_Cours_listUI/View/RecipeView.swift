@@ -2,18 +2,18 @@
 //  trackView.swift
 //  Test_Cours_listUI
 //
-//  Created by Vincent Baret on 08/02/2022.
+//  Created by m1 on 08/02/2022.
 //
 
 import AlertToast
 import SwiftUI
 
-struct UnitView: View {
+struct RecipeView: View {
     @Environment(\.presentationMode) var mode: Binding<PresentationMode>
-    var intent: UnitIntent
-    var intentOrigin: UnitIntent
-    @ObservedObject var viewModel: UnitViewModel
-    @ObservedObject var viewModelOrigin: UnitViewModel
+    var intent: RecipeIntent
+    var intentOrigin: RecipeIntent
+    @ObservedObject var viewModel: RecipeViewModel
+    @ObservedObject var viewModelOrigin: RecipeViewModel
     @State var message: String = ""
     @State var showMessage: Bool = false
     @State var showLoadingEdit: Bool = false
@@ -23,12 +23,12 @@ struct UnitView: View {
     @State var showToast: Bool = false
     @State var toast: AlertToast = AlertToast(displayMode: .hud, type: .regular, title: "")
     
-    init(vm: UnitViewModel){
-        self.intent = UnitIntent()
-        self.intentOrigin = UnitIntent()
+    init(vm: RecipeViewModel){
+        self.intent = RecipeIntent()
+        self.intentOrigin = RecipeIntent()
         
         self.viewModelOrigin = vm
-        self.viewModel = UnitViewModel(unit: vm.unit.clone())
+        self.viewModel = RecipeViewModel(recipe: vm.recipe.clone())
         
         self.intent.addObserver(vm: self.viewModel)
         self.intentOrigin.addObserver(vm: self.viewModelOrigin)
@@ -37,10 +37,50 @@ struct UnitView: View {
 
     var body: some View {
         Form {
-            TextField("", text: $viewModel.name, prompt: Text("Nom de l'unité"))
+            TextField("", text: $viewModel.name, prompt: Text("Nom de la recette"))
                 .onSubmit {
                     intent.intentToChange(name: viewModel.name)
                 }
+            TextField("", value: $viewModel.nb_couvert, format: .number, prompt: Text("Nombre de couvert"))
+                .onSubmit {
+                    intent.intentToChange(nb_couvert: viewModel.nb_couvert)
+                }
+            
+            HStack {
+                Text("Catégorie : ")
+                Spacer()
+                NavigationLink("\(viewModel.category.name)", destination: RecipeCategoryView(vm: RecipeCategoryViewModel(rc: viewModel.category)))
+            }
+
+            VStack {
+                Text("Etapes : ")
+                    .padding()
+                if viewModel.steps.data.count == 0 {
+                    Text("Cette recette ne contient pas d'étapes")
+                }
+                List {
+                    ForEach(viewModel.steps.vms, id: \.step.id) {
+                        vm in
+                        NavigationLink(destination: StepView(vm: vm)){
+                            VStack(alignment: .leading) {
+                                Text(vm.step.name)
+                            }
+                        }.onChange(of: vm.error, perform: { error in
+                            switch error {
+                                case .DELETE(let reason):
+                                    message = reason
+                                    showMessage = true
+                                default:
+                                    break
+                            }
+                        })
+                    }
+                    .onDelete{ indexSet in
+                        viewModel.steps.remove(atOffsets: indexSet)
+                    }
+                }
+            }
+            
             
             Section{
                 HStack{
@@ -56,18 +96,17 @@ struct UnitView: View {
                     .foregroundColor(Color.blue)
                     .onTapGesture {
                         showLoadingEdit = true
-                        UnitDAO.put(unit: viewModel.unit, callback: {result in
+                        RecipeDAO.put(recipe: viewModel.recipe, callback: { result in
                             showLoadingEdit = false
                             DispatchQueue.main.async {
                                 switch result {
-                                    case .success(_):
-                                        self.toast = AlertToast(displayMode: .hud, type: .complete(.green), title: "Modifications enregistrées")
-                                        self.showToast.toggle()
-                                        self.viewModelOrigin.unit.set(unit: self.viewModel.unit)
-                                        break
-                                    case .failure(let error):
-                                        self.message = error.description
-                                        self.showMessage = true
+                                case .success(_):
+                                    self.toast = AlertToast(displayMode: .hud, type: .complete(.green), title: "Modifications enregistrées")
+                                    self.showToast.toggle()
+                                    break
+                                case .failure(let error):
+                                    self.message = error.description
+                                    self.showMessage = true
                                 }
                             }
                         })
@@ -87,15 +126,15 @@ struct UnitView: View {
                     .foregroundColor(Color.red)
                     .onTapGesture {
                         showLoadingDelete = true
-                        intentOrigin.intentToDelete()
+                        intent.intentToDelete()
                     }
                 }
             }
         }
-        .navigationTitle("Unité")
+        .navigationTitle("Etape")
         .navigationBarBackButtonHidden(true)
         .navigationBarItems(leading: Button(action : {
-            if(!viewModelOrigin.unit.equal(unit: viewModel.unit)){
+            if(!viewModelOrigin.recipe.equal(recipe: viewModel.recipe)){
                 self.showUnsavedChangesWarning = true
             } else {
                 self.mode.wrappedValue.dismiss()
@@ -114,6 +153,15 @@ struct UnitView: View {
                     self.message = reason
                     self.showMessage = true
                     self.showLoadingDelete = false
+                case .CATEGORY(let reason):
+                    self.message = reason
+                    self.showMessage = true
+                case .NB_COUVERT(let reason):
+                    self.message = reason
+                    self.showMessage = true
+                case .STEP(let reason):
+                    self.message = reason
+                    self.showMessage = true
             }
         }.onChange(of: viewModel.deleted){ deleted in
             if deleted {
